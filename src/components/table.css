@@ -9,6 +9,11 @@ table td, table th {
   padding: 8px;
 }
 
+/* Added so will still appear as white when the table is downloaded */
+table tr {
+  background-color: white;
+}
+
 table tr:nth-child(even){background-color: #f2f2f2;}
 
 table tr:hover {background-color: #ddd;}

@@ -4,11 +4,10 @@ import { NumberOfPositions } from "./NumberOfPositions";
 import { ShiftLength } from "./ShiftLength";
 import { StartEndTime } from "./StartEndTime";
 import { GenerateTable } from "./GenerateTable";
-import {useTable} from "react-table";
 
 function parseNames(names: string) {
   let namesTmp = names.trim().split(/\s+/).filter(Boolean);
-  let namesSet = new Set(namesTmp)
+  let namesSet = new Set(namesTmp);
   console.log(namesSet);
   return Array.from(namesSet);
 }
@@ -37,7 +36,7 @@ function generateColumns(numOfPositions: number) {
 }
 
 /**
- *  using the Fisher-Yates shuffle algorithm to shuffle randomly
+ *  using the Fisher-Yates shuffle algorithm to shuffle randomly.
  *  the method:
  *  go from the last index i to the first. for each i:
  *    randomize an index between 0-i
@@ -99,7 +98,7 @@ function generateData(
 }
 
 type tableColumnsType = {
-  Header: string; 
+  Header: string;
   accessor: string;
 }[];
 
@@ -114,11 +113,16 @@ export const ShiftsForm = () => {
   const [restLength, setRestLength] = useState("");
   const [startTime, setStartTime] = useState("");
   const [numOfDays, setNumOfDays] = useState("");
+  const [errorCannotCreateTable, setErrorCannotCreateTable] = useState("");
   const [tableColumns, setTablecolumns] = useState<tableColumnsType>([]);
   const [tableData, setTabledata] = useState<tableDataType>([]);
+  const [showDownloadButton, setShowDownloadButton] = useState(false);
+  
 
   const handleSubmition = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorCannotCreateTable("");
+    setShowDownloadButton(false);
     console.log(inputNames);
     const namesArray: string[] = parseNames(inputNames);
     const numOfPositions = Number(numberOfPositions);
@@ -134,16 +138,14 @@ export const ShiftsForm = () => {
     if (Number.isInteger(Number(shiftLength))) console.log("woohoo");
     else console.log("what");
     if (!isViable(namesArray.length, Number(restLength), numOfPositions)) {
-      console.log(
-        "enter error message that the data cannot hold the restrictions"
-      );
+      setErrorCannotCreateTable("the data cannot hold the restrictions");
+      return;
     }
 
     /**
      * start generating the table, start with columns
      */
     const columns = generateColumns(numOfPositions);
-    /** get back to hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee */
     setTablecolumns(columns);
     const data = generateData(
       namesArray,
@@ -154,12 +156,7 @@ export const ShiftsForm = () => {
     );
     setTabledata(data);
     console.log(data);
-    
-    /** from here we need to generate the table */
-    // const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = useTable({
-    //   columns: tableColumns,
-    //   data: tableData
-    // })
+    setShowDownloadButton(true);
   };
 
   return (
@@ -188,12 +185,14 @@ export const ShiftsForm = () => {
           numOfDays={numOfDays}
           setNumOfDays={setNumOfDays}
         />
-
+        {errorCannotCreateTable && (
+          <p className="fs-3 fw-bold text-danger">{errorCannotCreateTable}</p>
+        )}
         <button type="submit" className="btn btn-success">
           Generate Table
         </button>
       </form>
-      <GenerateTable columns={tableColumns} data={tableData} />
+      <GenerateTable columns={tableColumns} data={tableData} downloadButton={showDownloadButton}/>
     </div>
   );
 };
