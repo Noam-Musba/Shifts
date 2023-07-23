@@ -3,11 +3,14 @@ import { InputNames } from "./InputNames";
 import { NumberOfPositions } from "./NumberOfPositions";
 import { ShiftLength } from "./ShiftLength";
 import { StartEndTime } from "./StartEndTime";
+import { GenerateTable } from "./GenerateTable";
+import {useTable} from "react-table";
 
 function parseNames(names: string) {
-  let namesSet = names.trim().split(/\s+/).filter(Boolean);
+  let namesTmp = names.trim().split(/\s+/).filter(Boolean);
+  let namesSet = new Set(namesTmp)
   console.log(namesSet);
-  return namesSet;
+  return Array.from(namesSet);
 }
 
 function isViable(
@@ -24,11 +27,11 @@ function isViable(
 
 function generateColumns(numOfPositions: number) {
   let columns = [];
-  columns.push({ header: "Time", accessor: "time" });
+  columns.push({ Header: "Time", accessor: "time" });
   for (let i = 0; i < numOfPositions; i++) {
     let headerName = "Pos" + i.toString();
     let accessorName = "pos" + i.toString();
-    columns.push({ header: headerName, accessor: accessorName });
+    columns.push({ Header: headerName, accessor: accessorName });
   }
   return columns;
 }
@@ -95,6 +98,15 @@ function generateData(
   return data;
 }
 
+type tableColumnsType = {
+  Header: string; 
+  accessor: string;
+}[];
+
+type tableDataType = {
+  [key: string]: string;
+}[];
+
 export const ShiftsForm = () => {
   const [inputNames, setInputName] = useState("");
   const [numberOfPositions, setNumberOfPositions] = useState("");
@@ -102,6 +114,8 @@ export const ShiftsForm = () => {
   const [restLength, setRestLength] = useState("");
   const [startTime, setStartTime] = useState("");
   const [numOfDays, setNumOfDays] = useState("");
+  const [tableColumns, setTablecolumns] = useState<tableColumnsType>([]);
+  const [tableData, setTabledata] = useState<tableDataType>([]);
 
   const handleSubmition = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -129,7 +143,8 @@ export const ShiftsForm = () => {
      * start generating the table, start with columns
      */
     const columns = generateColumns(numOfPositions);
-    console.log(columns);
+    /** get back to hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee */
+    setTablecolumns(columns);
     const data = generateData(
       namesArray,
       Number(numOfDays),
@@ -137,9 +152,14 @@ export const ShiftsForm = () => {
       startTime,
       Number(shiftLength)
     );
+    setTabledata(data);
     console.log(data);
-
+    
     /** from here we need to generate the table */
+    // const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = useTable({
+    //   columns: tableColumns,
+    //   data: tableData
+    // })
   };
 
   return (
@@ -173,6 +193,7 @@ export const ShiftsForm = () => {
           Generate Table
         </button>
       </form>
+      <GenerateTable columns={tableColumns} data={tableData} />
     </div>
   );
 };
