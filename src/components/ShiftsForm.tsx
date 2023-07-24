@@ -6,6 +6,7 @@ import { StartEndTime } from "./StartEndTime";
 import { GenerateTable } from "./GenerateTable";
 
 function parseNames(names: string) {
+  if (names === "") return [];
   let namesTmp = names.trim().split(/\s+/).filter(Boolean);
   let namesSet = new Set(namesTmp);
   console.log(namesSet);
@@ -24,13 +25,23 @@ function isViable(
   return true;
 }
 
-function generateColumns(numOfPositions: number) {
+function generateColumns(
+  numOfPositions: number,
+  positionsNamesArray: string[]
+) {
   let columns = [];
+  const specificPositionsNames = positionsNamesArray.length > 0 ? true : false;
   columns.push({ Header: "Time", accessor: "time" });
   for (let i = 0; i < numOfPositions; i++) {
-    let headerName = "Pos" + i.toString();
-    let accessorName = "pos" + i.toString();
-    columns.push({ Header: headerName, accessor: accessorName });
+    if (specificPositionsNames) {
+      let headerName = positionsNamesArray[i];
+      let accessorName = positionsNamesArray[i];
+      columns.push({ Header: headerName, accessor: accessorName });
+    } else {
+      let headerName = "Pos" + i.toString();
+      let accessorName = "pos" + i.toString();
+      columns.push({ Header: headerName, accessor: accessorName });
+    }
   }
   return columns;
 }
@@ -67,6 +78,7 @@ function generateData(
   namesArray: string[],
   numOfDays: number,
   numOfPositions: number,
+  positionsNamesArray: string[],
   startTime: string,
   shiftLength: number
 ) {
@@ -75,8 +87,16 @@ function generateData(
   const shiftsInOneDay = Math.ceil(24 / shiftLength);
   let clockTime = addTimeJump(startTime, -1 * shiftLength);
   let posArray = [];
-  for (let i = 0; i < numOfPositions; i++) {
-    posArray.push("pos" + i.toString());
+  if(positionsNamesArray.length > 0){
+    for (let i = 0; i < numOfPositions; i++) {
+      posArray.push(positionsNamesArray[i]);
+    }
+  }
+  else{
+
+    for (let i = 0; i < numOfPositions; i++) {
+      posArray.push("pos" + i.toString());
+    }
   }
   const names = randomizeOrder(namesArray);
   const sizeOfNames = names.length;
@@ -109,6 +129,7 @@ type tableDataType = {
 export const ShiftsForm = () => {
   const [inputNames, setInputName] = useState("");
   const [numberOfPositions, setNumberOfPositions] = useState("");
+  const [nameOfPositions, setNameOfPositions] = useState("");
   const [shiftLength, setShiftLength] = useState("");
   const [restLength, setRestLength] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -117,7 +138,6 @@ export const ShiftsForm = () => {
   const [tableColumns, setTablecolumns] = useState<tableColumnsType>([]);
   const [tableData, setTabledata] = useState<tableDataType>([]);
   const [showDownloadButton, setShowDownloadButton] = useState(false);
-  
 
   const handleSubmition = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,7 +145,18 @@ export const ShiftsForm = () => {
     setShowDownloadButton(false);
     console.log(inputNames);
     const namesArray: string[] = parseNames(inputNames);
+    const positionsNamesArray: string[] = parseNames(nameOfPositions);
     const numOfPositions = Number(numberOfPositions);
+    if (
+      positionsNamesArray.length > 0 &&
+      positionsNamesArray.length !== numOfPositions
+    ) {
+      setErrorCannotCreateTable(
+        "The names and the actual number of positions do not match!"
+      );
+      return;
+    }
+    console.log(positionsNamesArray);
     console.log(namesArray);
     console.log(numOfPositions);
     console.log(shiftLength);
@@ -145,12 +176,13 @@ export const ShiftsForm = () => {
     /**
      * start generating the table, start with columns
      */
-    const columns = generateColumns(numOfPositions);
+    const columns = generateColumns(numOfPositions, positionsNamesArray);
     setTablecolumns(columns);
     const data = generateData(
       namesArray,
       Number(numOfDays),
       numOfPositions,
+      positionsNamesArray,
       startTime,
       Number(shiftLength)
     );
@@ -174,6 +206,8 @@ export const ShiftsForm = () => {
         <NumberOfPositions
           numberOfPositions={numberOfPositions}
           setNumberOfPositions={setNumberOfPositions}
+          nameOfPositions={nameOfPositions}
+          setNameOfPositions={setNameOfPositions}
         />
         <ShiftLength
           setShiftLength={setShiftLength}
@@ -192,7 +226,11 @@ export const ShiftsForm = () => {
           Generate Table
         </button>
       </form>
-      <GenerateTable columns={tableColumns} data={tableData} downloadButton={showDownloadButton}/>
+      <GenerateTable
+        columns={tableColumns}
+        data={tableData}
+        downloadButton={showDownloadButton}
+      />
     </div>
   );
 };

@@ -24,7 +24,7 @@ export const InputNames = (props: InputNamesProps) => {
           onChange={(event) => props.setInputName(event.target.value)}
           required
         />
-        <label htmlFor="InputNames">Insert names</label>
+        <label htmlFor="InputNames">Insert either first or last names - repititions are considered as the same person</label>
       </div>
     </div>
   );
